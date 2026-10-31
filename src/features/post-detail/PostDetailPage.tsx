@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api';
 import type { CommentView, Location } from '../../api/ports';
+import type { Resolution } from '../../domain/types';
 import { FullState } from '../../shared/ui/FullState';
 
 export default function PostDetailPage() {
@@ -10,6 +11,7 @@ export default function PostDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [commentText, setCommentText] = useState('');
+  const [resolution, setResolution] = useState<Resolution | ''>('');
 
   const {
     data: post,
@@ -38,6 +40,13 @@ export default function PostDetailPage() {
   const { data: currentUser } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: () => api.auth.me(),
+  });
+
+  const isAuthor = post != null && currentUser != null && post.authorId === currentUser.id;
+  const { data: claims, isLoading: claimsLoading } = useQuery({
+    queryKey: ['claims', post?.id],
+    queryFn: () => (post ? api.claims.listForPost(post.id) : Promise.resolve([])),
+    enabled: isAuthor,
   });
 
   if (isLoading) {
@@ -71,6 +80,21 @@ export default function PostDetailPage() {
       return;
     }
     await api.claims.request(post.id, message);
+  };
+
+  const acceptClaim = async (claimId: string) => {
+    await api.claims.decide(claimId, 'ACCEPT');
+    await queryClient.invalidateQueries({ queryKey: ['posts', 'detail', post.id] });
+  };
+
+  const rejectClaim = async (claimId: string) => {
+    await api.claims.decide(claimId, 'REJECT');
+    await queryClient.invalidateQueries({ queryKey: ['posts', 'detail', post.id] });
+  };
+
+  const resolvePost = async (resolution: Resolution) => {
+    await api.posts.transition(post.id, 'RESOLVED', resolution);
+    await queryClient.invalidateQueries({ queryKey: ['posts', 'detail', post.id] });
   };
 
   const canComment =
@@ -187,6 +211,80 @@ export default function PostDetailPage() {
           </div>
         ) : null}
       </section>
+
+      {isAuthor && post ? (
+        <section className="mt-6 rounded border border-slate-200 bg-white p-4">
+          <h3 className="mb-3 font-semibold">Reivindicações</h3>
+          {claimsLoading ? (
+            <FullState variant="loading" />
+          ) : (claims ?? []).length === 0 ? (
+            <FullState variant="empty" />
+          ) : (
+            <ul className="space-y-3">
+              {(claims ?? []).map((claim) => (
+                <li key={claim.id} className="rounded bg-slate-50 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold">{claim.claimant.displayName}</span>
+                    <span className="text-xs uppercase text-slate-600">{claim.status}</span>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-700">{claim.message}</p>
+                  {post.status === 'OPEN' && claim.status === 'PENDING' ? (
+                    <div className="mt-2 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void acceptClaim(claim.id)}
+                        className="rounded bg-slate-900 px-3 py-1 text-sm text-white"
+                      >
+                        Aceitar reivindicação
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void rejectClaim(claim.id)}
+                        className="rounded border border-slate-300 px-3 py-1 text-sm"
+                      >
+                        Recusar
+                      </button>
+                    </div>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+          {post.status !== 'RESOLVED' ? (
+            <div className="mt-4 flex items-end gap-2">
+              <label className="text-sm" htmlFor="resolution">
+                Desfecho
+              </label>
+              <select
+                id="resolution"
+                className="rounded border border-slate-300 px-2 py-1 text-sm"
+                value={resolution}
+                onChange={(event) => setResolution(event.target.value as Resolution | '')}
+              >
+                <option value="" disabled>
+                  Selecionar…
+                </option>
+                <option value="RETURNED">Devolvido</option>
+                <option value="FOUND_BY_OWNER">Encontrado pelo dono</option>
+                <option value="GAVE_UP">Abandonou</option>
+                <option value="OTHER">Outro</option>
+              </select>
+              <button
+                type="button"
+                onClick={() => {
+                  if (resolution) {
+                    void resolvePost(resolution);
+                  }
+                }}
+                disabled={!resolution}
+                className="rounded bg-slate-900 px-3 py-1 text-sm text-white disabled:opacity-50"
+              >
+                Marcar como resolvido
+              </button>{' '}
+            </div>
+          ) : null}
+        </section>
+      ) : null}
     </div>
   );
 }
