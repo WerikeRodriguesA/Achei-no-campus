@@ -16,6 +16,7 @@ export const navItems: NavItem[] = [
   { label: 'Nova publicação', path: '/posts/new', requiresAuth: true },
   { label: 'Minhas publicações', path: '/me', requiresAuth: true },
   { label: 'Minhas reivindicações', path: '/claims', requiresAuth: true },
+  { label: 'Minhas denúncias', path: '/reports', requiresAuth: true },
 ];
 
 export const moderationNavItems: NavItem[] = [
@@ -37,6 +38,7 @@ export const routes = {
   postEdit: (id: string) => `/posts/${id}/edit`,
   myPosts: '/me',
   claims: '/claims',
+  reports: '/reports',
   moderation: '/moderation',
   styleguide: '/_styleguide',
 } as const;

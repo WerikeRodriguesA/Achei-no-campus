@@ -9,6 +9,7 @@ import MyPostsPage from '../features/post-create/MyPostsPage';
 import ModerationPage from '../features/moderation/ModerationPage';
 import RegisterPage from '../features/auth/RegisterPage';
 import ClaimsPage from '../features/claims/ClaimsPage';
+import ReportsPage from '../features/reports/ReportsPage';
 import StyleguidePage from './StyleguidePage';
 import NotFoundPage from './NotFoundPage';
 
@@ -72,6 +73,14 @@ const routes: RouteObject[] = [
         element: (
           <RequireAuth>
             <ClaimsPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: 'reports',
+        element: (
+          <RequireAuth>
+            <ReportsPage />
           </RequireAuth>
         ),
       },
