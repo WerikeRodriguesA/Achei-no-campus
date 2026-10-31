@@ -8,6 +8,7 @@ import PostDetailPage from '../features/post-detail/PostDetailPage';
 import MyPostsPage from '../features/post-create/MyPostsPage';
 import ModerationPage from '../features/moderation/ModerationPage';
 import RegisterPage from '../features/auth/RegisterPage';
+import StyleguidePage from './StyleguidePage';
 
 const routes: RouteObject[] = [
   {
@@ -56,6 +57,15 @@ const routes: RouteObject[] = [
           </RequireModerator>
         ),
       },
+      // Styleguide - apenas em desenvolvimento
+      ...(import.meta.env.DEV
+        ? [
+            {
+              path: '_styleguide',
+              element: <StyleguidePage />,
+            },
+          ]
+        : []),
     ],
   },
 ];
