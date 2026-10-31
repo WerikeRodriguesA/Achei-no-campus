@@ -5,12 +5,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import PostDetailPage from './PostDetailPage';
 import { api } from '../../api';
-import type { CommentView } from '../../api/ports';
+import type { CommentView, ClaimView } from '../../api/ports';
 
 vi.mock('../../api', () => ({
   api: {
     posts: {
       get: vi.fn(),
+      transition: vi.fn(),
     },
     comments: {
       list: vi.fn(),
@@ -19,6 +20,9 @@ vi.mock('../../api', () => ({
     },
     claims: {
       request: vi.fn(),
+      listForPost: vi.fn(),
+      decide: vi.fn(),
+      withdraw: vi.fn(),
     },
     auth: {
       me: vi.fn(),
@@ -30,7 +34,10 @@ const getMock = vi.mocked(api.posts.get);
 const listMock = vi.mocked(api.comments.list);
 const addMock = vi.mocked(api.comments.add);
 const removeMock = vi.mocked(api.comments.remove);
+const claimsListMock = vi.mocked(api.claims.listForPost);
+const decideMock = vi.mocked(api.claims.decide);
 const meMock = vi.mocked(api.auth.me);
+const transitionMock = vi.mocked(api.posts.transition);
 
 const post = {
   id: 'p-found-1',
@@ -58,6 +65,16 @@ const comment: CommentView = {
   author: { id: 'u-marina', displayName: 'Marina' },
 };
 
+const claim: ClaimView = {
+  id: 'cl-1',
+  postId: 'p-found-1',
+  claimantId: 'u-marina',
+  message: 'Tenho o fone comigo agora.',
+  status: 'PENDING',
+  createdAt: '2026-10-29T10:00:00.000Z',
+  claimant: { id: 'u-marina', displayName: 'Marina' },
+};
+
 function renderDetail() {
   const queryClient = new QueryClient();
   return render(
@@ -78,7 +95,10 @@ describe('PostDetailPage', () => {
     listMock.mockResolvedValue([comment]);
     addMock.mockResolvedValue(comment);
     removeMock.mockResolvedValue(undefined);
-    meMock.mockResolvedValue({ id: 'u-marina', displayName: 'Marina', role: 'USER' });
+    claimsListMock.mockResolvedValue([claim]);
+    decideMock.mockResolvedValue(claim);
+    transitionMock.mockResolvedValue(post);
+    meMock.mockResolvedValue({ id: 'u-rafael', displayName: 'Rafael', role: 'USER' });
   });
 
   afterEach(() => {
@@ -94,6 +114,7 @@ describe('PostDetailPage', () => {
   });
 
   it('renderiza comentários e permite adicionar o próprio', async () => {
+    meMock.mockResolvedValue({ id: 'u-marina', displayName: 'Marina', role: 'USER' });
     const user = userEvent.setup();
     renderDetail();
     expect(await screen.findByText('Vi um fone na garricha do Bloco A.')).toBeInTheDocument();
@@ -104,6 +125,28 @@ describe('PostDetailPage', () => {
 
     await waitFor(() =>
       expect(addMock).toHaveBeenCalledWith('p-found-1', 'Encontrei também o estojo.'),
+    );
+  });
+
+  it('autor vê reivindicações e aceita a reivindicação', async () => {
+    const user = userEvent.setup();
+    renderDetail();
+    expect(await screen.findByText('Aceitar reivindicação')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Aceitar reivindicação' }));
+    await waitFor(() => expect(decideMock).toHaveBeenCalledWith('cl-1', 'ACCEPT'));
+  });
+
+  it('autor marca publicação como resolvida com desfecho', async () => {
+    const user = userEvent.setup();
+    renderDetail();
+    expect(await screen.findByText('Marcar como resolvido')).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText('Desfecho'), 'RETURNED');
+    await user.click(screen.getByRole('button', { name: 'Marcar como resolvido' }));
+
+    await waitFor(() =>
+      expect(transitionMock).toHaveBeenCalledWith('p-found-1', 'RESOLVED', 'RETURNED'),
     );
   });
 });
