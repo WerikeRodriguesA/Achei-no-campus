@@ -1,7 +1,7 @@
 import { Outlet, useLocation, NavLink } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../api';
-import { PrototypeBanner, Avatar } from '../shared/ui';
+import { PrototypeBanner, Avatar, ToastProvider } from '../shared/ui';
 import { DemoSwitcher } from '../shared/DemoSwitcher';
 import { LogOutIcon, UserIcon, HomeIcon, FileTextIcon, UserPlusIcon, ShieldIcon, MenuIcon, XIcon } from '../shared/ui/icons';
 import { useState } from 'react';
@@ -24,8 +24,9 @@ export default function AppLayout() {
   const isActive = (path: string) => location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
-      <PrototypeBanner />
+    <ToastProvider>
+      <div className="flex min-h-screen flex-col bg-slate-50">
+        <PrototypeBanner />
 
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white px-4 py-3">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4">
@@ -220,5 +221,6 @@ export default function AppLayout() {
         Protótipo v0.1 — dados simulados
       </footer>
     </div>
+    </ToastProvider>
   );
 }

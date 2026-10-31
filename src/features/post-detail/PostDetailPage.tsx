@@ -20,8 +20,9 @@ import {
   SectionHeader,
   EmptyState,
   formatRelativeDate,
+  Badge,
 } from '../../shared/ui';
-import { TrashIcon, MessageSquareIcon, ShieldIcon } from '../../shared/ui/icons';
+import { TrashIcon, MessageSquareIcon, ShieldIcon, ClockIcon, CheckCircleIcon, XCircleIcon } from '../../shared/ui/icons';
 
 export default function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -254,6 +255,52 @@ export default function PostDetailPage() {
             </Button>
           </CardContent>
         </Card>
+      ) : null}
+
+      {/* Claimant's own request card */}
+      {currentUser && !isAuthor && post && claims && claims.length > 0 ? (
+        (() => {
+          const userClaim = claims.find((claim) => claim.claimantId === currentUser.id);
+          if (!userClaim) return null;
+
+          const getStatusConfig = () => {
+            switch (userClaim.status) {
+              case 'PENDING':
+                return { icon: <ClockIcon size={16} className="mr-1" />, label: 'Pendente — aguardando resposta do autor', variant: 'outline' as const, color: 'amber' };
+              case 'ACCEPTED':
+                return { icon: <CheckCircleIcon size={16} className="mr-1" />, label: 'Aceita — combine a devolução com o autor', variant: 'outline' as const, color: 'green' };
+              case 'REJECTED':
+                return { icon: <XCircleIcon size={16} className="mr-1" />, label: 'Recusada', variant: 'outline' as const, color: 'red' };
+              case 'WITHDRAWN':
+                return { icon: <XCircleIcon size={16} className="mr-1" />, label: 'Retirada', variant: 'outline' as const, color: 'slate' };
+              default:
+                return { icon: <ClockIcon size={16} className="mr-1" />, label: userClaim.status, variant: 'outline' as const, color: 'slate' };
+            }
+          };
+
+          const config = getStatusConfig();
+
+          return (
+            <Card key="user-claim" variant="outlined" padding="md" className="mb-6">
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <ShieldIcon size={20} />
+                  <span className="font-medium">Sua solicitação</span>
+                </div>
+                <p className="text-sm text-slate-600">{userClaim.message}</p>
+                <Badge variant={config.variant} className={`text-${config.color}-700 bg-${config.color}-50 border-${config.color}-200`}>
+                  {config.icon}
+                  {config.label}
+                </Badge>
+                {userClaim.status === 'PENDING' && (
+                  <Button variant="ghost" size="sm" onClick={() => void api.claims.withdraw(userClaim.id)}>
+                    Retirar solicitação
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })()
       ) : null}
 
       {/* Claims section for author */}

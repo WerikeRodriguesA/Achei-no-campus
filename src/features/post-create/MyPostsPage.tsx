@@ -12,7 +12,7 @@ import {
   EmptyState,
   formatRelativeDate,
 } from '../../shared/ui';
-import { TrashIcon, ArrowRightIcon } from '../../shared/ui/icons';
+import { TrashIcon, ArrowRightIcon, EditIcon } from '../../shared/ui/icons';
 
 export default function MyPostsPage() {
   const queryClient = useQueryClient();
@@ -85,6 +85,14 @@ export default function MyPostsPage() {
                     onClick={() => window.location.href = `/posts/${post.id}`}
                   >
                     <ArrowRightIcon size={18} />
+                  </IconButton>
+                  <IconButton
+                    aria-label="Editar publicação"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => window.location.href = `/posts/${post.id}/edit`}
+                  >
+                    <EditIcon size={18} />
                   </IconButton>
                   <IconButton
                     aria-label="Excluir publicação"

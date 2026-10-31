@@ -51,6 +51,7 @@ export const ChevronLeftIcon = createIcon('<polyline points="15 18 9 12 15 6"/>'
 export const ChevronRightIcon = createIcon('<polyline points="9 18 15 12 9 6"/>');
 export const MenuIcon = createIcon('<path d="M3 12h18M3 6h18M3 18h18"/>');
 export const XCircleIcon = createIcon('<circle cx="12" cy="12" r="10"/><path d="M15 9 9 15M9 9l6 6"/>');
+export const CheckCircleIcon = createIcon('<circle cx="12" cy="12" r="10"/><polyline points="20 6 9 17 4 12"/>');
 export const EyeIcon = createIcon('<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>');
 export const EyeOffIcon = createIcon('<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M23 23l-1.5-1.5"/><path d="M17 17l-5-5"/>');
 export const BellIcon = createIcon('<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>');

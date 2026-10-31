@@ -7,6 +7,7 @@ import {
   Button,
   Select,
   FormField,
+  Input,
   SkeletonFeedItem,
   FullState,
   PageHeader,
@@ -19,6 +20,7 @@ export default function FeedPage() {
   const [kind, setKind] = useState('');
   const [status, setStatus] = useState<string>(params.status ?? '');
   const [locationId, setLocationId] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['posts', params],
@@ -86,6 +88,21 @@ export default function FeedPage() {
       />
 
       <div className="mb-6 flex flex-wrap items-end gap-4" role="search" aria-label="Filtros do feed">
+        <div className="flex-1 min-w-[200px]">
+          <label htmlFor="feed-search" className="mb-1 block text-sm font-semibold text-slate-900">Buscar</label>
+          <Input
+            id="feed-search"
+            type="search"
+            placeholder="Buscar por título ou descrição..."
+            value={searchQuery}
+            onChange={(e) => {
+              const query = e.target.value;
+              setSearchQuery(query);
+              applyFilters({ q: query || undefined });
+            }}
+          />
+        </div>
+
         <FormField id="feed-kind" label="Tipo">
           <Select
             id="feed-kind"

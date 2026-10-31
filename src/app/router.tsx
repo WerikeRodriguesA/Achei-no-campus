@@ -35,6 +35,14 @@ const routes: RouteObject[] = [
         ),
       },
       {
+        path: 'posts/:id/edit',
+        element: (
+          <RequireAuth>
+            <PostCreatePage />
+          </RequireAuth>
+        ),
+      },
+      {
         path: 'posts/:id',
         element: (
           <RequireAuth>
