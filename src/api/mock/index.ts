@@ -314,6 +314,16 @@ export function createMockApi(deps: MockApiDeps = {}): MockAdapter {
       if (!viewer) {
         throw new ApiError('UNAUTHENTICATED', 'Sessão necessária.');
       }
+      const post = state.posts.find((item) => item.id === postId);
+      if (!post) {
+        throw new ApiError('NOT_FOUND', 'Publicação não encontrada.');
+      }
+      if (post.status === 'RESOLVED' || post.hidden) {
+        throw new ApiError(
+          'FORBIDDEN',
+          'Não é possível comentar em publicações resolvidas ou ocultas.',
+        );
+      }
       if (text.length < 1 || text.length > 500) {
         throw new ApiError('VALIDATION', 'Comentário deve ter de 1 a 500 caracteres.', {
           text: 'Comentário deve ter de 1 a 500 caracteres.',
