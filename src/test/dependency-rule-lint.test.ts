@@ -43,4 +43,28 @@ describe('regra de dependência entre camadas', () => {
     expect(messages).toHaveLength(1);
     expect(messages[0]?.ruleId).toBe('no-restricted-imports');
   });
+
+  it('rejeita que domain importe de pacote externo com escopo', () => {
+    const messages = linter.verify(
+      `import { QueryClient } from '@tanstack/react-query';`,
+      configFor('src/domain/**/*.{ts,tsx}', [
+        { regex: '^@', message: 'domain não deve importar de pacotes externos.' },
+      ]),
+      'src/domain/post-status.ts',
+    );
+    expect(messages).toHaveLength(1);
+    expect(messages[0]?.ruleId).toBe('no-restricted-imports');
+  });
+
+  it('rejeita que api/mock importe de features', () => {
+    const messages = linter.verify(
+      `import { FeedPage } from '../../features/feed/FeedPage';`,
+      configFor('src/api/mock/**/*.{ts,tsx}', [
+        { regex: '.*features/.*', message: 'api/mock não deve importar de features.' },
+      ]),
+      'src/api/mock/index.ts',
+    );
+    expect(messages).toHaveLength(1);
+    expect(messages[0]?.ruleId).toBe('no-restricted-imports');
+  });
 });

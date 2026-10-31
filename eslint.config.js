@@ -49,7 +49,7 @@ const config = tseslint.config(
     },
   },
   {
-    // domain/ não deve importar de api/ nem de React/libs externas
+    // domain/ não deve importar de api/, de React/libs externas nem de outras camadas
     files: ['src/domain/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': [
@@ -58,7 +58,24 @@ const config = tseslint.config(
           patterns: [
             { regex: '.*api/.*', message: 'domain não deve importar de api.' },
             { regex: '^react', message: 'domain não deve importar de React.' },
-            { regex: '^@types/', message: 'domain não deve importar de tipos externos.' },
+            { regex: '^@', message: 'domain não deve importar de pacotes externos.' },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // apenas api/index.ts escolhe o adaptador mock; api/mock/ não deve importar de features/
+    files: ['src/api/mock/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '.*features/.*',
+              message: 'api/mock não deve importar de features; apenas api/index.ts escolhe o adaptador.',
+            },
           ],
         },
       ],
