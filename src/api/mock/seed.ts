@@ -16,7 +16,8 @@ export const SEED_LOCATIONS: Location[] = [
   { id: 'loc-quadra', name: 'Quadra' },
   { id: 'loc-patio', name: 'Pátio' },
   { id: 'loc-lab-info', name: 'Laboratório de Informática' },
-  // TODO: trocar pela lista real do campus
+  // TODO(#3): Substituir pela lista real de locais do Campus Corrente do IFPI
+  // Issue: https://github.com/.../issues/3
 ];
 
 const svgPhoto = (label: string): string =>
