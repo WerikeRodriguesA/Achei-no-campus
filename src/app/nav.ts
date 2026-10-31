@@ -15,6 +15,7 @@ export const navItems: NavItem[] = [
   { label: 'Feed', path: '/', requiresAuth: true },
   { label: 'Nova publicação', path: '/posts/new', requiresAuth: true },
   { label: 'Minhas publicações', path: '/me', requiresAuth: true },
+  { label: 'Minhas reivindicações', path: '/claims', requiresAuth: true },
 ];
 
 export const moderationNavItems: NavItem[] = [
@@ -33,7 +34,9 @@ export const routes = {
   feed: '/',
   createPost: '/posts/new',
   postDetail: (id: string) => `/posts/${id}`,
+  postEdit: (id: string) => `/posts/${id}/edit`,
   myPosts: '/me',
+  claims: '/claims',
   moderation: '/moderation',
   styleguide: '/_styleguide',
 } as const;

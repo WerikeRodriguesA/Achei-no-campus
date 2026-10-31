@@ -8,6 +8,7 @@ import PostDetailPage from '../features/post-detail/PostDetailPage';
 import MyPostsPage from '../features/post-create/MyPostsPage';
 import ModerationPage from '../features/moderation/ModerationPage';
 import RegisterPage from '../features/auth/RegisterPage';
+import ClaimsPage from '../features/claims/ClaimsPage';
 import StyleguidePage from './StyleguidePage';
 import NotFoundPage from './NotFoundPage';
 
@@ -64,6 +65,14 @@ const routes: RouteObject[] = [
           <RequireModerator>
             <ModerationPage />
           </RequireModerator>
+        ),
+      },
+      {
+        path: 'claims',
+        element: (
+          <RequireAuth>
+            <ClaimsPage />
+          </RequireAuth>
         ),
       },
       // Styleguide - apenas em desenvolvimento
