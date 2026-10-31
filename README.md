@@ -15,13 +15,13 @@ npm run dev
 
 ## Scripts
 
-| Comando            | Descrição             |
-| ------------------ | --------------------- |
-| `npm run dev`      | Servidor de desenvolvimento (Vite) |
-| `npm run build`    | Build de produção    |
-| `npm run preview`  | Preview do build     |
-| `npm run test`     | Testes (Vitest)       |
-| `npm run lint`     | Lint (ESLint)         |
+| Comando           | Descrição                          |
+| ----------------- | ---------------------------------- |
+| `npm run dev`     | Servidor de desenvolvimento (Vite) |
+| `npm run build`   | Build de produção                  |
+| `npm run preview` | Preview do build                   |
+| `npm run test`    | Testes (Vitest)                    |
+| `npm run lint`    | Lint (ESLint)                      |
 
 ## Estrutura
 
