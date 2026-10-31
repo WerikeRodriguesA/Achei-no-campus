@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Routes, Route } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import FeedPage from './FeedPage';
@@ -37,7 +38,11 @@ function renderFeed() {
   const queryClient = new QueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
-      <FeedPage />
+      <MemoryRouter>
+        <Routes>
+          <Route path="/" element={<FeedPage />} />
+        </Routes>
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -51,6 +56,7 @@ describe('FeedPage', () => {
 
   it('renderiza publicações do feed', async () => {
     renderFeed();
+    // O título aparece dentro do Card/Link
     expect(await screen.findByText('Fone de ouvido preto')).toBeInTheDocument();
   });
 
@@ -59,7 +65,8 @@ describe('FeedPage', () => {
     renderFeed();
     await screen.findByText('Fone de ouvido preto');
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Filtrar por tipo' }), 'FOUND');
+    // O Select component usa label "Tipo"
+    await user.selectOptions(screen.getByLabelText('Tipo'), 'FOUND');
     expect(listMock).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'FOUND' }));
   });
 });

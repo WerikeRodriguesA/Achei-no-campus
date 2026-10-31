@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import MyPostsPage from './MyPostsPage';
 import { api } from '../../api';
 
@@ -38,6 +38,12 @@ describe('MyPostsPage', () => {
     vi.clearAllMocks();
     listMock.mockResolvedValue({ items: [post], nextCursor: null });
     removeMock.mockResolvedValue(undefined);
+    // Mock window.confirm to return true
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('renderiza publicações do usuário', async () => {
@@ -58,7 +64,8 @@ describe('MyPostsPage', () => {
         <MyPostsPage />
       </QueryClientProvider>,
     );
-    const removeButton = await screen.findByRole('button', { name: 'Excluir' });
+    // O botão de excluir agora é um IconButton com aria-label "Excluir publicação"
+    const removeButton = await screen.findByRole('button', { name: 'Excluir publicação' });
     await user.click(removeButton);
     await waitFor(() => expect(removeMock).toHaveBeenCalledWith('p-found-1'));
   });

@@ -9,6 +9,7 @@ import MyPostsPage from '../features/post-create/MyPostsPage';
 import ModerationPage from '../features/moderation/ModerationPage';
 import RegisterPage from '../features/auth/RegisterPage';
 import StyleguidePage from './StyleguidePage';
+import NotFoundPage from './NotFoundPage';
 
 const routes: RouteObject[] = [
   {
@@ -66,6 +67,8 @@ const routes: RouteObject[] = [
             },
           ]
         : []),
+      // Catch-all 404
+      { path: '*', element: <NotFoundPage /> },
     ],
   },
 ];

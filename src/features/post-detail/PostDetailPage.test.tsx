@@ -107,7 +107,10 @@ describe('PostDetailPage', () => {
 
   it('renderiza os dados da publicação', async () => {
     renderDetail();
-    expect(await screen.findByText('Fone de ouvido preto')).toBeInTheDocument();
+    // O título aparece no PageHeader (h1) - usar o primeiro elemento encontrado
+    const titleElements = await screen.findAllByText('Fone de ouvido preto');
+    expect(titleElements.length).toBeGreaterThan(0);
+    expect(titleElements[0]).toBeInTheDocument();
     expect(
       screen.getByText('Encontrei um fone de ouvido preto na área do Bloco A.'),
     ).toBeInTheDocument();
@@ -119,9 +122,14 @@ describe('PostDetailPage', () => {
     renderDetail();
     expect(await screen.findByText('Vi um fone na garricha do Bloco A.')).toBeInTheDocument();
 
-    const textarea = screen.getByLabelText('Comentário');
+    // O textarea tem id "comment-text" e label "Novo comentário"
+    const textarea = screen.getByLabelText('Novo comentário');
     await user.type(textarea, 'Encontrei também o estojo.');
-    await user.click(screen.getByRole('button', { name: 'Comentar' }));
+    // Há dois botões "Comentar" - um no SectionHeader (ghost) e outro no form (primary).
+    // O do form é o que submete o comentário - usar o último ou o que está próximo do textarea.
+    const commentButtons = screen.getAllByRole('button', { name: 'Comentar' });
+    const submitButton = commentButtons[commentButtons.length - 1];
+    if (submitButton) await user.click(submitButton);
 
     await waitFor(() =>
       expect(addMock).toHaveBeenCalledWith('p-found-1', 'Encontrei também o estojo.'),
@@ -131,17 +139,19 @@ describe('PostDetailPage', () => {
   it('autor vê reivindicações e aceita a reivindicação', async () => {
     const user = userEvent.setup();
     renderDetail();
-    expect(await screen.findByText('Aceitar reivindicação')).toBeInTheDocument();
+    expect(await screen.findByText('Aceitar')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Aceitar reivindicação' }));
+    await user.click(screen.getByRole('button', { name: 'Aceitar' }));
     await waitFor(() => expect(decideMock).toHaveBeenCalledWith('cl-1', 'ACCEPT'));
   });
 
   it('autor marca publicação como resolvida com desfecho', async () => {
     const user = userEvent.setup();
     renderDetail();
-    expect(await screen.findByText('Marcar como resolvido')).toBeInTheDocument();
+    // Usar getByRole para pegar apenas o botão, não o h4
+    expect(await screen.findByRole('button', { name: 'Marcar como resolvido' })).toBeInTheDocument();
 
+    // O Select tem label "Desfecho"
     await user.selectOptions(screen.getByLabelText('Desfecho'), 'RETURNED');
     await user.click(screen.getByRole('button', { name: 'Marcar como resolvido' }));
 

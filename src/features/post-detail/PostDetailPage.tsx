@@ -1,14 +1,30 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useParams } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api';
 import type { CommentView, Location } from '../../api/ports';
 import type { Resolution } from '../../domain/types';
-import { FullState } from '../../shared/ui/FullState';
+import {
+  Button,
+  IconButton,
+  Textarea,
+  Select,
+  FormField,
+  Card,
+  CardHeader,
+  CardContent,
+  ClaimStatusBadge,
+  FullState,
+  PageHeader,
+  Avatar,
+  SectionHeader,
+  EmptyState,
+  formatRelativeDate,
+} from '../../shared/ui';
+import { TrashIcon, MessageSquareIcon, ShieldIcon } from '../../shared/ui/icons';
 
 export default function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [commentText, setCommentText] = useState('');
   const [resolution, setResolution] = useState<Resolution | ''>('');
@@ -61,9 +77,7 @@ export default function PostDetailPage() {
 
   const addComment = async () => {
     const text = commentText.trim();
-    if (!text) {
-      return;
-    }
+    if (!text) return;
     await api.comments.add(post.id, text);
     setCommentText('');
     await queryClient.invalidateQueries({ queryKey: ['comments', post.id] });
@@ -76,9 +90,7 @@ export default function PostDetailPage() {
 
   const requestClaim = async () => {
     const message = window.prompt('Mensagem de reivindicação (10 a 500 caracteres):');
-    if (!message) {
-      return;
-    }
+    if (!message) return;
     await api.claims.request(post.id, message);
   };
 
@@ -108,182 +120,215 @@ export default function PostDetailPage() {
   );
 
   return (
-    <div className="mx-auto max-w-5xl p-4">
-      <button
-        type="button"
-        onClick={() => navigate('/')}
-        className="mb-4 rounded border border-slate-300 px-3 py-1 text-sm"
-      >
-        Voltar ao feed
-      </button>
-      <article className="rounded border border-slate-200 bg-white p-4">
-        <div className="flex items-center gap-2">
-          <span className="rounded bg-slate-900 px-2 py-0.5 text-xs text-white uppercase">
-            {post.kind === 'LOST' ? 'Perdido' : 'Achado'}
-          </span>
-          <span className="rounded bg-slate-200 px-2 py-0.5 text-xs uppercase text-slate-700">
-            {post.status}
-          </span>
-        </div>
-        <h2 className="mt-2 text-xl font-bold">{post.title}</h2>
-        <p className="mt-2 text-sm text-slate-600">{post.description}</p>
-        <dl className="mt-4 grid gap-2 text-sm">
-          <div>
-            <dt className="font-semibold">Local:</dt>
-            <dd>{location?.name ?? post.locationId}</dd>
-          </div>
-          {post.custody ? (
-            <div>
-              <dt className="font-semibold">Local de guarda:</dt>
-              <dd>{post.custody === 'GUARITA' ? 'Garricha/GUARITA' : 'Disciplina/DISCIPLINA'}</dd>
-            </div>
-          ) : null}
-          {post.resolution ? (
-            <div>
-              <dt className="font-semibold">Desfecho:</dt>
-              <dd>{post.resolution}</dd>
-            </div>
-          ) : null}
-          <div>
-            <dt className="font-semibold">Autor:</dt>
-            <dd>{post.author.displayName}</dd>
-          </div>
-        </dl>
-      </article>
+    <div className="mx-auto max-w-3xl p-4">
+      <PageHeader title={post.title} subtitle={post.kind === 'LOST' ? 'Perdido' : 'Achado'} backUrl="/" />
 
-      <section className="mt-6 rounded border border-slate-200 bg-white p-4">
-        <h3 className="mb-3 font-semibold">Comentários e pistas</h3>
-        {commentsLoading ? (
-          <FullState variant="loading" />
-        ) : sortedComments.length === 0 ? (
-          <FullState variant="empty" />
-        ) : (
-          <ul className="space-y-3">
-            {sortedComments.map((comment) => (
-              <li key={comment.id} className="rounded bg-slate-50 p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-semibold">{comment.author.displayName}</span>
-                  {currentUser && comment.authorId === currentUser.id ? (
-                    <button
-                      type="button"
-                      onClick={() => void removeComment(comment.id)}
-                      className="text-xs text-red-600 underline"
-                    >
-                      Remover comentário
-                    </button>
-                  ) : null}
-                </div>
-                <p className="mt-1 text-sm text-slate-700">{comment.text}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-        {canComment ? (
-          <div className="mt-4 flex flex-col gap-2">
-            <textarea
-              aria-label="Comentário"
-              className="w-full rounded border border-slate-300 p-2 text-sm"
-              value={commentText}
-              onChange={(event) => setCommentText(event.target.value)}
-              placeholder="Escreva uma pista…"
-            />
-            <button
-              type="button"
-              onClick={() => void addComment()}
-              className="self-start rounded bg-slate-900 px-4 py-2 text-sm text-white"
-            >
-              Comentar
-            </button>
-          </div>
-        ) : null}
-        {post.kind === 'FOUND' &&
-        post.status === 'OPEN' &&
-        currentUser &&
-        post.authorId !== currentUser.id ? (
-          <div className="mt-4">
-            <button
-              type="button"
-              onClick={() => void requestClaim()}
-              className="rounded bg-slate-900 px-4 py-2 text-sm text-white"
-            >
-              Solicitar reivindicação
-            </button>
-          </div>
-        ) : null}
-      </section>
+      <Card variant="default" padding="md" className="mb-6">
+        <CardHeader
+          title={post.title}
+          subtitle={post.kind === 'LOST' ? 'Perdido' : 'Achado'}
+        />
+        <CardContent className="space-y-4">
+          <p className="text-slate-700">{post.description}</p>
+          <dl className="grid gap-3 sm:grid-cols-2 text-sm">
+            <div>
+              <dt className="font-semibold text-slate-500">Local</dt>
+              <dd className="text-slate-700">{location?.name ?? post.locationId}</dd>
+            </div>
+            {post.custody ? (
+              <div>
+                <dt className="font-semibold text-slate-500">Local de guarda</dt>
+                <dd className="text-slate-700">
+                  {post.custody === 'GUARITA' ? 'Guarita' : 'Disciplina'}
+                </dd>
+              </div>
+            ) : null}
+            {post.resolution ? (
+              <div>
+                <dt className="font-semibold text-slate-500">Desfecho</dt>
+                <dd className="text-slate-700">{post.resolution}</dd>
+              </div>
+            ) : null}
+            <div>
+              <dt className="font-semibold text-slate-500">Autor</dt>
+              <dd className="flex items-center gap-2 text-slate-700">
+                <Avatar name={post.author.displayName} size="sm" />
+                {post.author.displayName}
+              </dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="font-semibold text-slate-500">Publicado em</dt>
+              <dd className="text-slate-700">{formatRelativeDate(post.createdAt)}</dd>
+            </div>
+          </dl>
+        </CardContent>
+      </Card>
 
-      {isAuthor && post ? (
-        <section className="mt-6 rounded border border-slate-200 bg-white p-4">
-          <h3 className="mb-3 font-semibold">Reivindicações</h3>
-          {claimsLoading ? (
-            <FullState variant="loading" />
-          ) : (claims ?? []).length === 0 ? (
-            <FullState variant="empty" />
+      {/* Comments section */}
+      <Card variant="default" padding="md" className="mb-6">
+        <SectionHeader
+          title="Comentários e pistas"
+          action={
+            canComment ? (
+              <Button variant="ghost" size="sm" onClick={() => {}}>
+                <MessageSquareIcon size={16} className="mr-1" />
+                Comentar
+              </Button>
+            ) : null
+          }
+        />
+        <CardContent>
+          {commentsLoading ? (
+            <div className="space-y-3" aria-label="Carregando comentários">
+              <div className="animate-pulse space-y-3">
+                <div className="h-20 bg-slate-100 rounded" />
+                <div className="h-20 bg-slate-100 rounded" />
+              </div>
+            </div>
+          ) : sortedComments.length === 0 ? (
+            <EmptyState title="Nenhum comentário" description="Seja o primeiro a deixar uma pista ou comentário." />
           ) : (
-            <ul className="space-y-3">
-              {(claims ?? []).map((claim) => (
-                <li key={claim.id} className="rounded bg-slate-50 p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-semibold">{claim.claimant.displayName}</span>
-                    <span className="text-xs uppercase text-slate-600">{claim.status}</span>
-                  </div>
-                  <p className="mt-1 text-sm text-slate-700">{claim.message}</p>
-                  {post.status === 'OPEN' && claim.status === 'PENDING' ? (
-                    <div className="mt-2 flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => void acceptClaim(claim.id)}
-                        className="rounded bg-slate-900 px-3 py-1 text-sm text-white"
-                      >
-                        Aceitar reivindicação
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void rejectClaim(claim.id)}
-                        className="rounded border border-slate-300 px-3 py-1 text-sm"
-                      >
-                        Recusar
-                      </button>
+            <ul className="space-y-3" aria-label="Comentários">
+              {sortedComments.map((comment) => (
+                <li key={comment.id} className="rounded-lg bg-slate-50 p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Avatar name={comment.author.displayName} size="xs" />
+                      <span className="font-semibold text-sm">{comment.author.displayName}</span>
+                      <span className="text-xs text-slate-500">{formatRelativeDate(comment.createdAt)}</span>
                     </div>
-                  ) : null}
+                    {currentUser && comment.authorId === currentUser.id ? (
+                      <IconButton
+                        aria-label="Remover comentário"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => void removeComment(comment.id)}
+                      >
+                        <TrashIcon size={16} />
+                      </IconButton>
+                    ) : null}
+                  </div>
+                  <p className="mt-2 text-sm text-slate-700">{comment.text}</p>
                 </li>
               ))}
             </ul>
           )}
-          {post.status !== 'RESOLVED' ? (
-            <div className="mt-4 flex items-end gap-2">
-              <label className="text-sm" htmlFor="resolution">
-                Desfecho
-              </label>
-              <select
-                id="resolution"
-                className="rounded border border-slate-300 px-2 py-1 text-sm"
-                value={resolution}
-                onChange={(event) => setResolution(event.target.value as Resolution | '')}
+          {canComment && (
+            <div className="mt-4 space-y-3">
+              <FormField
+                id="comment-text"
+                label="Novo comentário"
+                hint="Máximo 500 caracteres"
               >
-                <option value="" disabled>
-                  Selecionar…
-                </option>
-                <option value="RETURNED">Devolvido</option>
-                <option value="FOUND_BY_OWNER">Encontrado pelo dono</option>
-                <option value="GAVE_UP">Abandonou</option>
-                <option value="OTHER">Outro</option>
-              </select>
-              <button
-                type="button"
-                onClick={() => {
-                  if (resolution) {
-                    void resolvePost(resolution);
-                  }
-                }}
-                disabled={!resolution}
-                className="rounded bg-slate-900 px-3 py-1 text-sm text-white disabled:opacity-50"
-              >
-                Marcar como resolvido
-              </button>{' '}
+                <Textarea
+                  id="comment-text"
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder="Escreva uma pista ou comentário..."
+                  maxLength={500}
+                  showCounter
+                  rows={3}
+                />
+              </FormField>
+              <Button onClick={() => void addComment()} disabled={!commentText.trim()}>
+                Comentar
+              </Button>
             </div>
-          ) : null}
-        </section>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Claim request for found items */}
+      {post.kind === 'FOUND' &&
+      post.status === 'OPEN' &&
+      currentUser &&
+      post.authorId !== currentUser.id ? (
+        <Card variant="outlined" padding="md" className="mb-6 border-amber-200 bg-amber-50">
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-2 text-amber-800">
+              <ShieldIcon size={20} />
+              <span className="font-medium">Este item foi achado. Você pode reivindicá-lo se for o dono.</span>
+            </div>
+            <Button variant="primary" onClick={() => void requestClaim()}>
+              Solicitar reivindicação
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {/* Claims section for author */}
+      {isAuthor && post ? (
+        <Card variant="default" padding="md">
+          <SectionHeader title="Reivindicações" description="Gerencie as solicitações de devolução" />
+          <CardContent>
+            {claimsLoading ? (
+              <div className="animate-pulse space-y-3">
+                <div className="h-20 bg-slate-100 rounded" />
+                <div className="h-20 bg-slate-100 rounded" />
+              </div>
+            ) : (claims ?? []).length === 0 ? (
+              <EmptyState title="Nenhuma reivindicação" description="Ninguém solicitou a devolução deste item ainda." />
+            ) : (
+              <ul className="space-y-3" aria-label="Reivindicações">
+                {(claims ?? []).map((claim) => (
+                  <li key={claim.id} className="rounded-lg bg-slate-50 p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <Avatar name={claim.claimant.displayName} size="sm" />
+                        <div>
+                          <span className="font-semibold text-sm">{claim.claimant.displayName}</span>
+                          <ClaimStatusBadge status={claim.status} />
+                        </div>
+                      </div>
+                    </div>
+                    <p className="mt-2 text-sm text-slate-700">{claim.message}</p>
+                    {post.status === 'OPEN' && claim.status === 'PENDING' ? (
+                      <div className="mt-3 flex gap-2">
+                        <Button variant="primary" size="sm" onClick={() => void acceptClaim(claim.id)}>
+                          Aceitar
+                        </Button>
+                        <Button variant="secondary" size="sm" onClick={() => void rejectClaim(claim.id)}>
+                          Recusar
+                        </Button>
+                      </div>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {post.status !== 'RESOLVED' && (
+              <div className="mt-6 pt-4 border-t border-slate-200">
+                <h4 className="mb-3 font-medium">Marcar como resolvido</h4>
+                <div className="flex items-end gap-2 flex-wrap">
+                  <FormField id="resolution" label="Desfecho">
+                    <Select
+                      id="resolution"
+                      value={resolution}
+                      onChange={(e) => setResolution(e.target.value as Resolution | '')}
+                      placeholder="Selecione o desfecho"
+                      className="w-full sm:w-64"
+                      options={[
+                        { value: '', label: 'Selecionar…' },
+                        { value: 'RETURNED', label: 'Devolvido' },
+                        { value: 'FOUND_BY_OWNER', label: 'Encontrado pelo dono' },
+                        { value: 'GAVE_UP', label: 'Abandonou' },
+                        { value: 'OTHER', label: 'Outro' },
+                      ]}
+                    />
+                  </FormField>
+                  <Button
+                    onClick={() => {
+                      if (resolution) void resolvePost(resolution);
+                    }}
+                    disabled={!resolution}
+                  >
+                    Marcar como resolvido
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       ) : null}
     </div>
   );

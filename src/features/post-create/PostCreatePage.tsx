@@ -5,6 +5,15 @@ import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../api';
 import type { CustodyLocation } from '../../domain/types';
+import {
+  Button,
+  Input,
+  Textarea,
+  Select,
+  FormField,
+  RadioGroup,
+  PageHeader,
+} from '../../shared/ui';
 
 const createPostSchema = z.object({
   kind: z.enum(['LOST', 'FOUND'], { message: 'Selecione o tipo da publicação.' }),
@@ -72,114 +81,110 @@ export default function PostCreatePage() {
     navigate(`/posts/${post.id}`);
   };
 
-  const inputClass = 'w-full rounded border border-slate-300 px-3 py-2 text-sm';
-
   return (
     <div className="mx-auto max-w-5xl p-4">
-      <h2 className="mb-4 text-xl font-bold">Criar publicação</h2>
-      <form
-        className="space-y-4 rounded border border-slate-200 bg-white p-4"
-        onSubmit={handleSubmit(onSubmit)}
-      >
-        <div>
-          <label className="mb-1 block text-sm font-semibold" htmlFor="kind">
-            Tipo
-          </label>
-          <select
-            id="kind"
-            className={inputClass}
+      <PageHeader title="Criar publicação" subtitle="Preencha os dados do objeto perdido ou achado" backUrl="/" />
+
+      <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <FormField id="create-kind" label="Tipo" hint="Selecione se o item foi perdido ou achado">
+          <RadioGroup
+            id="create-kind"
+            name="kind"
             value={kindValue}
-            onChange={(event) => setValue('kind', event.target.value as 'LOST' | 'FOUND')}
-          >
-            <option value="LOST">Perdido</option>
-            <option value="FOUND">Achado</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-semibold" htmlFor="title">
-            Título
-          </label>
-          <input id="title" className={inputClass} type="text" {...register('title')} />
-          {errors.title ? (
-            <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
-          ) : null}
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-semibold" htmlFor="description">
-            Descrição
-          </label>
-          <textarea
-            id="description"
-            className={`${inputClass} min-h-24`}
-            {...register('description')}
+            onChange={(value) => setValue('kind', value as 'LOST' | 'FOUND')}
+            variant="segmented"
+            options={[
+              { value: 'LOST', label: 'Perdido' },
+              { value: 'FOUND', label: 'Achado' },
+            ]}
           />
-          {errors.description ? (
-            <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
-          ) : null}
-        </div>
+        </FormField>
 
-        <div>
-          <label className="mb-1 block text-sm font-semibold" htmlFor="locationId">
-            Local
-          </label>
-          <select id="locationId" className={inputClass} {...register('locationId')}>
-            <option value="">Selecione…</option>
-            {locations.map((location) => (
-              <option key={location.id} value={location.id}>
-                {location.name}
-              </option>
-            ))}
-          </select>
-          {errors.locationId ? (
-            <p className="mt-1 text-sm text-red-600">{errors.locationId.message}</p>
-          ) : null}
-        </div>
+        <FormField
+          id="create-title"
+          label="Título"
+          hint="De 3 a 80 caracteres"
+          error={errors.title?.message}
+        >
+          <Input
+            id="create-title"
+            {...register('title')}
+            placeholder="Ex: Chaves do carro com chaveiro azul"
+          />
+        </FormField>
 
-        <div>
-          <label className="mb-1 block text-sm font-semibold" htmlFor="approxDate">
-            Data aproximada
-          </label>
-          <input id="approxDate" className={inputClass} type="date" {...register('approxDate')} />
-          {errors.approxDate ? (
-            <p className="mt-1 text-sm text-red-600">{errors.approxDate.message}</p>
-          ) : null}
-        </div>
+        <FormField
+          id="create-description"
+          label="Descrição"
+          hint="De 10 a 1000 caracteres — descreva detalhes, cor, marca, estado"
+          error={errors.description?.message}
+        >
+          <Textarea
+            id="create-description"
+            {...register('description')}
+            placeholder="Descreva o objeto com o máximo de detalhes possível..."
+            maxLength={1000}
+            showCounter
+            rows={5}
+          />
+        </FormField>
 
-        {kindValue === 'FOUND' ? (
-          <div>
-            <label className="mb-1 block text-sm font-semibold" htmlFor="custody">
-              Local de guarda (obrigatório em achados)
-            </label>
-            <select
-              id="custody"
-              className={inputClass}
+        <FormField
+          id="create-location"
+          label="Local"
+          error={errors.locationId?.message}
+        >
+          <Select
+            id="create-location"
+            {...register('locationId')}
+            placeholder="Selecione o local"
+            options={locations.map((loc) => ({ value: loc.id, label: loc.name }))}
+          />
+        </FormField>
+
+        <FormField
+          id="create-approx-date"
+          label="Data aproximada"
+          hint="Quando o item foi perdido ou encontrado"
+          error={errors.approxDate?.message}
+        >
+          <Input
+            id="create-approx-date"
+            type="date"
+            {...register('approxDate')}
+            max={new Date().toISOString().split('T')[0]}
+          />
+        </FormField>
+
+        {kindValue === 'FOUND' && (
+          <FormField
+            id="create-custody"
+            label="Local de guarda"
+            hint="Obrigatório para itens achados — onde o item está guardado"
+            error={errors.custody?.message}
+          >
+            <Select
+              id="create-custody"
               value={custodyValue ?? ''}
-              onChange={(event) =>
+              onChange={(e) =>
                 setValue(
                   'custody',
-                  (event.target.value || undefined) as CustodyLocation | undefined,
+                  (e.target.value || undefined) as CustodyLocation | undefined,
                 )
               }
-            >
-              <option value="">Selecione…</option>
-              <option value="GUARITA">Garricha</option>
-              <option value="DISCIPLINA">Disciplina</option>
-            </select>
-            {errors.custody ? (
-              <p className="mt-1 text-sm text-red-600">{errors.custody.message}</p>
-            ) : null}
-          </div>
-        ) : null}
+              placeholder="Selecione o local de guarda"
+              options={[
+                { value: '', label: 'Selecione…' },
+                { value: 'GUARITA', label: 'Guarita' },
+                { value: 'DISCIPLINA', label: 'Disciplina' },
+              ]}
+            />
+          </FormField>
+        )}
 
-        <div>
-          <label className="mb-1 block text-sm font-semibold" htmlFor="photos">
-            Fotos (até 3)
-          </label>
-          <input
-            id="photos"
-            className={inputClass}
+        <FormField id="create-photos" label="Fotos (até 3)" hint="Adicione fotos do objeto para facilitar a identificação">
+          <Input
+            id="create-photos"
             type="file"
             multiple
             accept="image/*"
@@ -188,18 +193,16 @@ export default function PostCreatePage() {
               setValue('photos', files.slice(0, 3));
             }}
           />
-          {errors.photos ? (
-            <p className="mt-1 text-sm text-red-600">{errors.photos.message}</p>
-          ) : null}
-        </div>
+          {errors.photos && (
+            <p className="mt-1 text-sm text-red-600" role="alert">{errors.photos.message}</p>
+          )}
+        </FormField>
 
-        <button
-          type="submit"
-          className="rounded bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-50"
-          disabled={false}
-        >
-          Publicar
-        </button>
+        <div className="flex justify-end pt-4 border-t border-slate-200">
+          <Button type="submit" size="lg">
+            Publicar
+          </Button>
+        </div>
       </form>
     </div>
   );

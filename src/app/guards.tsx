@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { Navigate, useLocation } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../api';
-import { FullState } from '../shared/ui/FullState';
+import { FullState } from '../shared/ui';
 
 function useCurrentUser() {
   const { data: user, isLoading } = useQuery({
@@ -21,7 +21,7 @@ export function RequireAuth({ children }: RequireAuthProps) {
   const location = useLocation();
 
   if (isLoading) {
-    return <FullState variant="loading" />;
+    return <FullState variant="loading" title="Verificando autenticação..." />;
   }
   if (!user) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
@@ -38,7 +38,7 @@ export function RequireModerator({ children }: RequireModeratorProps) {
   const location = useLocation();
 
   if (isLoading) {
-    return <FullState variant="loading" />;
+    return <FullState variant="loading" title="Verificando permissões..." />;
   }
   if (!user) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;

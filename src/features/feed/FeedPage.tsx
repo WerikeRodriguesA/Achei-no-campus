@@ -1,8 +1,18 @@
 import { useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router';
 import { api } from '../../api';
 import type { ListPostsParams, Location } from '../../api/ports';
-import { FullState } from '../../shared/ui/FullState';
+import {
+  Button,
+  Select,
+  FormField,
+  SkeletonFeedItem,
+  FullState,
+  PageHeader,
+  KindBadge,
+  StatusBadge,
+} from '../../shared/ui';
 
 export default function FeedPage() {
   const [params, setParams] = useState<ListPostsParams>({ status: 'OPEN' });
@@ -36,7 +46,16 @@ export default function FeedPage() {
   };
 
   if (isLoading) {
-    return <FullState variant="loading" />;
+    return (
+      <div className="mx-auto max-w-5xl p-4">
+        <PageHeader title="Acheos e perdidos" subtitle="Filtre e encontre publicações" />
+        <div className="space-y-3" role="feed" aria-label="Feed de publicações">
+          <SkeletonFeedItem />
+          <SkeletonFeedItem />
+          <SkeletonFeedItem />
+        </div>
+      </div>
+    );
   }
   if (error) {
     return <FullState variant="error" onRetry={() => void refetch()} />;
@@ -45,86 +64,110 @@ export default function FeedPage() {
     return <FullState variant="empty" />;
   }
   if (posts.length === 0) {
-    return <FullState variant="empty" description="Nenhuma publicação encontrada." />;
+    return (
+      <FullState
+        variant="empty"
+        title="Nenhuma publicação"
+        description="Nenhuma publicação encontrada com os filtros atuais."
+      />
+    );
   }
 
   return (
     <div className="mx-auto max-w-5xl p-4">
-      <h2 className="mb-4 text-xl font-bold">Acheos e perdidos</h2>
-      <div className="mb-4 flex flex-wrap gap-2">
-        <select
-          aria-label="Filtrar por tipo"
-          className="rounded border border-slate-300 px-2 py-1 text-sm"
-          value={kind}
-          onChange={(event) => {
-            const nextKind = event.target.value;
-            setKind(nextKind);
-            applyFilters({ kind: nextKind ? (nextKind as ListPostsParams['kind']) : undefined });
-          }}
-        >
-          <option value="">Todos os tipos</option>
-          <option value="LOST">Perdidos</option>
-          <option value="FOUND">Achados</option>
-        </select>
-        <select
-          aria-label="Filtrar por estado"
-          className="rounded border border-slate-300 px-2 py-1 text-sm"
-          value={status}
-          onChange={(event) => {
-            const nextStatus = event.target.value;
-            setStatus(nextStatus);
-            applyFilters({
-              status: nextStatus ? (nextStatus as ListPostsParams['status']) : undefined,
-            });
-          }}
-        >
-          <option value="">Todos os estados</option>
-          <option value="OPEN">Aberto</option>
-          <option value="IN_PROGRESS">Em andamento</option>
-          <option value="RESOLVED">Resolvido</option>
-        </select>
-        <select
-          aria-label="Filtrar por local"
-          className="rounded border border-slate-300 px-2 py-1 text-sm"
-          value={locationId}
-          onChange={(event) => {
-            const nextLocationId = event.target.value;
-            setLocationId(nextLocationId);
-            applyFilters({ locationId: nextLocationId || undefined });
-          }}
-        >
-          <option value="">Todos os locais</option>
-          {locations.map((location) => (
-            <option key={location.id} value={location.id}>
-              {location.name}
-            </option>
-          ))}
-        </select>
+      <PageHeader
+        title="Acheos e perdidos"
+        subtitle="Filtre e encontre publicações"
+        action={
+          <Link to="/posts/new">
+            <Button size="sm">Nova publicação</Button>
+          </Link>
+        }
+      />
+
+      <div className="mb-6 flex flex-wrap items-end gap-4" role="search" aria-label="Filtros do feed">
+        <FormField id="feed-kind" label="Tipo">
+          <Select
+            id="feed-kind"
+            value={kind}
+            onChange={(e) => {
+              const nextKind = e.target.value;
+              setKind(nextKind);
+              applyFilters({ kind: nextKind ? (nextKind as ListPostsParams['kind']) : undefined });
+            }}
+            placeholder="Todos os tipos"
+            className="w-48"
+            options={[
+              { value: '', label: 'Todos os tipos' },
+              { value: 'LOST', label: 'Perdidos' },
+              { value: 'FOUND', label: 'Achados' },
+            ]}
+          />
+        </FormField>
+
+        <FormField id="feed-status" label="Estado">
+          <Select
+            id="feed-status"
+            value={status}
+            onChange={(e) => {
+              const nextStatus = e.target.value;
+              setStatus(nextStatus);
+              applyFilters({
+                status: nextStatus ? (nextStatus as ListPostsParams['status']) : undefined,
+              });
+            }}
+            placeholder="Todos os estados"
+            className="w-48"
+            options={[
+              { value: '', label: 'Todos os estados' },
+              { value: 'OPEN', label: 'Aberto' },
+              { value: 'IN_PROGRESS', label: 'Em andamento' },
+              { value: 'RESOLVED', label: 'Resolvido' },
+            ]}
+          />
+        </FormField>
+
+        <FormField id="feed-location" label="Local">
+          <Select
+            id="feed-location"
+            value={locationId}
+            onChange={(e) => {
+              const nextLocationId = e.target.value;
+              setLocationId(nextLocationId);
+              applyFilters({ locationId: nextLocationId || undefined });
+            }}
+            placeholder="Todos os locais"
+            className="w-64"
+            options={[
+              { value: '', label: 'Todos os locais' },
+              ...locations.map((location) => ({ value: location.id, label: location.name })),
+            ]}
+          />
+        </FormField>
       </div>
-      <button
-        type="button"
-        onClick={loadMore}
-        disabled={!nextCursor}
-        className="mb-4 rounded border border-slate-300 px-3 py-1 text-sm disabled:opacity-50"
-      >
-        Carregar mais
-      </button>
-      <ul className="space-y-3">
+
+      <ul className="space-y-3" role="feed" aria-label="Lista de publicações">
         {posts.map((post) => (
-          <li key={post.id} className="rounded border border-slate-200 bg-white p-4">
-            <div className="flex items-center gap-2">
-              <span className="rounded bg-slate-900 px-2 py-0.5 text-xs text-white uppercase">
-                {post.kind === 'LOST' ? 'Perdido' : 'Achado'}
-              </span>
-              <span className="rounded bg-slate-200 px-2 py-0.5 text-xs uppercase text-slate-700">
-                {post.status}
-              </span>
-            </div>
-            <h3 className="mt-2 font-semibold">{post.title}</h3>
-            <p className="text-sm text-slate-600">{post.description}</p>
+          <li key={post.id} className="rounded-lg border border-slate-200 bg-white p-4 hover:shadow-md transition-shadow">
+            <Link to={`/posts/${post.id}`} className="block">
+              <div className="flex items-center gap-2">
+                <KindBadge kind={post.kind} />
+                <StatusBadge status={post.status} />
+              </div>
+              <h3 className="mt-2 font-semibold text-slate-900 line-clamp-1">{post.title}</h3>
+              <p className="mt-1 text-sm text-slate-600 line-clamp-2">{post.description}</p>
+            </Link>
           </li>
         ))}
       </ul>
+
+      {nextCursor && (
+        <div className="mt-6 text-center">
+          <Button variant="secondary" onClick={loadMore} disabled={!nextCursor}>
+            Carregar mais
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
