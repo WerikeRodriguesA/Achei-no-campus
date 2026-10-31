@@ -22,7 +22,7 @@ import {
   formatRelativeDate,
   Badge,
 } from '../../shared/ui';
-import { TrashIcon, MessageSquareIcon, ShieldIcon, ClockIcon, CheckCircleIcon, XCircleIcon } from '../../shared/ui/icons';
+import { TrashIcon, MessageSquareIcon, ShieldIcon, ClockIcon, CheckCircleIcon, XCircleIcon, FlagIcon, PlayIcon } from '../../shared/ui/icons';
 
 export default function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -110,6 +110,21 @@ export default function PostDetailPage() {
     await queryClient.invalidateQueries({ queryKey: ['posts', 'detail', post.id] });
   };
 
+  const transitionToInProgress = async () => {
+    await api.posts.transition(post.id, 'IN_PROGRESS');
+    await queryClient.invalidateQueries({ queryKey: ['posts', 'detail', post.id] });
+  };
+
+  const reportPost = async () => {
+    const reason = window.prompt('Motivo da denúncia (mínimo 5 caracteres):');
+    if (!reason || reason.trim().length < 5) {
+      alert('O motivo deve ter pelo menos 5 caracteres.');
+      return;
+    }
+    await api.reports.create(post.id, reason.trim());
+    alert('Denúncia enviada com sucesso.');
+  };
+
   const canComment =
     post.status !== 'RESOLVED' &&
     !post.hidden &&
@@ -122,7 +137,19 @@ export default function PostDetailPage() {
 
   return (
     <div className="mx-auto max-w-3xl p-4">
-      <PageHeader title={post.title} subtitle={post.kind === 'LOST' ? 'Perdido' : 'Achado'} backUrl="/" />
+      <PageHeader
+        title={post.title}
+        subtitle={post.kind === 'LOST' ? 'Perdido' : 'Achado'}
+        backUrl="/"
+        action={
+          currentUser && !isAuthor && post.status === 'OPEN' && !post.hidden ? (
+            <Button variant="ghost" size="sm" onClick={() => void reportPost()}>
+              <FlagIcon size={16} className="mr-1" />
+              Denunciar
+            </Button>
+          ) : null
+        }
+      />
 
       <Card variant="default" padding="md" className="mb-6">
         <CardHeader
@@ -345,6 +372,19 @@ export default function PostDetailPage() {
             )}
             {post.status !== 'RESOLVED' && (
               <div className="mt-6 pt-4 border-t border-slate-200">
+                {post.status === 'OPEN' && (
+                  <div className="mb-4">
+                    <h4 className="mb-3 font-medium">Marcar como em andamento</h4>
+                    <Button
+                      variant="secondary"
+                      onClick={() => void transitionToInProgress()}
+                      disabled={post.status !== 'OPEN'}
+                    >
+                      <PlayIcon size={16} className="mr-1" />
+                      Marcar como em andamento
+                    </Button>
+                  </div>
+                )}
                 <h4 className="mb-3 font-medium">Marcar como resolvido</h4>
                 <div className="flex items-end gap-2 flex-wrap">
                   <FormField id="resolution" label="Desfecho">
@@ -352,7 +392,7 @@ export default function PostDetailPage() {
                       id="resolution"
                       value={resolution}
                       onChange={(e) => setResolution(e.target.value as Resolution | '')}
-                      placeholder="Selecione o desfecho"
+                      placeholder="Selecionar…"
                       className="w-full sm:w-64"
                       options={[
                         { value: '', label: 'Selecionar…' },

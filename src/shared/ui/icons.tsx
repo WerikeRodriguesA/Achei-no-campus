@@ -67,3 +67,4 @@ export const FlaskConicalIcon = createIcon('<path d="M10 2v7.31"/><path d="M14 2
 export const RefreshCwIcon = createIcon('<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M21 12a9 9 0 1 1-9 9c2.52 0 4.93-1 6.74-2.74L21 8"/>');
 export const InboxIcon = createIcon('<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>');
 export const LockIcon = createIcon('<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>');
+export const PlayIcon = createIcon('<polygon points="5 3 19 12 5 21 5 3"/>');
